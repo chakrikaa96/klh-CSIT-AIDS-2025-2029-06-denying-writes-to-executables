@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: GPL-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExecGuard Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1216; --panel: #171b21; --line: #262c35;
+    --text: #e6e9ee; --muted: #8a93a0;
+    --deny: #ff5c5c; --allow: #3ddc84; --audit: #ffcc4d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  header {
+    padding: 18px 24px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .5px; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-bottom: 24px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .card .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  .card .v { font-size: 22px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  td.path { white-space: normal; word-break: break-all; color: var(--muted); }
+  .tag { padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .DENY  { background: rgba(255,92,92,.15);  color: var(--deny); }
+  .ALLOW { background: rgba(61,220,132,.15); color: var(--allow); }
+  .AUDIT { background: rgba(255,204,77,.15); color: var(--audit); }
+  .foot { color: var(--muted); font-size: 12px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ExecGuard</h1>
+  <span class="sub">read-only monitor &middot; auto-refresh 3s</span>
+</header>
+<main>
+  <div class="cards" id="cards"></div>
+  <table>
+    <thead>
+      <tr><th>Time</th><th>Decision</th><th>Op</th><th>Process</th><th>UID</th><th>Reason</th><th>Target</th></tr>
+    </thead>
+    <tbody id="events"><tr><td colspan="7">Loading&hellip;</td></tr></tbody>
+  </table>
+  <div class="foot" id="foot"></div>
+</main>
+<script>
+"use strict";
+
+function card(k, v) {
+  return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+}
+
+async function refresh() {
+  try {
+    const [status, events] = await Promise.all([
+      fetch("/api/status").then(r => r.json()),
+      fetch("/api/events").then(r => r.json()),
+    ]);
+
+    const c = document.getElementById("cards");
+    if (status.error) {
+      c.innerHTML = card("Status", "daemon down");
+    } else {
+      c.innerHTML =
+        card("Protection", status["Protection Status"] || "-") +
+        card("Protected Files", status["Protected Files"] || "-") +
+        card("Blocked Attempts", status["Blocked Attempts"] || "0") +
+        card("Allowed Updates", status["Allowed Updates"] || "0") +
+        card("Maintenance", status["Maintenance Mode"] || "-");
+    }
+
+    const tbody = document.getElementById("events");
+    if (!events.length) {
+      tbody.innerHTML = '<tr><td colspan="7">No events recorded yet.</td></tr>';
+    } else {
+      tbody.innerHTML = events.map(e => {
+        const dec = (e.decision || "").toUpperCase();
+        const target = e.target_path || e.target_name || "-";
+        return `<tr>
+          <td>${e.ts_ns || ""}</td>
+          <td><span class="tag ${dec}">${dec}</span></td>
+          <td>${e.op || ""}</td>
+          <td>${e.comm || ""}</td>
+          <td>${e.uid ?? ""}</td>
+          <td>${e.reason || ""}</td>
+          <td class="path">${target}</td>
+        </tr>`;
+      }).join("");
+    }
+    document.getElementById("foot").textContent =
+      "Last update: " + new Date().toLocaleTimeString();
+  } catch (err) {
+    document.getElementById("foot").textContent = "Fetch error: " + err;
+  }
+}
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

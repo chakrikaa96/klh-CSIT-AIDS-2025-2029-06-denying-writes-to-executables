@@ -1,0 +1,26 @@
+[Unit]
+Description=ExecGuard - policy-based executable integrity and write protection
+Documentation=file:/usr/local/share/doc/execguard/README.md
+After=local-fs.target
+# Load early so protection is active before most services start.
+DefaultDependencies=yes
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/execguardd --config /etc/execguard/execguard.conf --foreground
+Restart=on-failure
+RestartSec=2
+
+# The daemon needs to load BPF and attach LSM programs.
+# CAP_BPF + CAP_SYS_ADMIN cover map/prog creation and LSM attach across kernels.
+AmbientCapabilities=CAP_BPF CAP_SYS_ADMIN CAP_PERFMON CAP_DAC_READ_SEARCH
+CapabilityBoundingSet=CAP_BPF CAP_SYS_ADMIN CAP_PERFMON CAP_DAC_READ_SEARCH
+
+# Modest hardening. Note: this protects the daemon, not the kernel programs.
+NoNewPrivileges=no
+ProtectHome=read-only
+ProtectClock=yes
+MemoryDenyWriteExecute=no
+
+[Install]
+WantedBy=multi-user.target
