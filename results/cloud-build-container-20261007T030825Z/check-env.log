@@ -1,0 +1,37 @@
+ExecGuard :: environment detection (read-only)
+
+Kernel
+  Running kernel: 6.18.44-fc-v77 (6.18)
+  [ OK ] Kernel 6.18 supports BPF-LSM (>= 5.7).
+
+BTF / CO-RE
+  [ OK ] Kernel BTF present at /sys/kernel/btf/vmlinux.
+
+Active LSMs
+  [WARN] securityfs not mounted or unreadable (/sys/kernel/security/lsm). Cannot confirm active LSMs.
+
+Kernel configuration
+  Reading config from: /tmp/execguard-kconfig.2699
+  [ OK ] CONFIG_BPF_LSM=y
+  [ OK ] CONFIG_DEBUG_INFO_BTF=y
+  [ OK ] CONFIG_SECURITY_PATH=y (path_* hooks available)
+
+Build toolchain
+  [ OK ] clang found: /usr/bin/clang
+  [ OK ] llvm-strip found: /usr/bin/llvm-strip
+  [ OK ] bpftool found: /usr/lib/linux-tools-6.8.0-146/bpftool
+  [ OK ] libbpf development headers found.
+
+fanotify (fallback path)
+  [ OK ] Kernel supports fanotify (permission events since 2.6.37).
+  Note: fanotify can DENY write-opens but can only DETECT rename/unlink.
+
+==============================================================
+
+ExecGuard environment verdict
+
+==============================================================
+  Mode: FANOTIFY_FALLBACK -- partial enforcement.
+  write/append/truncate-at-open can be denied; rename-over and unlink
+  can only be detected after the fact. This is a documented limitation.
+  To unlock full mode: add 'lsm=...,bpf' to the kernel cmdline and reboot.

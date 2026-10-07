@@ -1,0 +1,208 @@
+==================================================================
+ suite: unit
+==================================================================
+1. Core library
+    ExecGuard userspace core unit tests
+    
+    [ABI layout shared with the BPF program]
+      PASS  sizeof(eg_file_key) == 16 (got 16)
+      PASS  sizeof(eg_file_val) == 8 (got 8)
+      PASS  sizeof(eg_state) == 16 (got 16)
+      PASS  sizeof(eg_event) == 336 (got 336)
+      PASS  offsetof(eg_event.pid) == 40
+      PASS  offsetof(eg_event.comm) == 64
+      PASS  offsetof(eg_event.target) == 80
+    
+    [eg_encode_kdev: glibc st_dev -> kernel (major<<20)|minor]
+      PASS  sda1 (8:1) -> 8388609
+      PASS  nvme0n1p3 (259:3) -> 271581187
+      PASS  dm (253:65536) keeps a minor wider than 8 bits
+      PASS  0:0 -> 0
+      PASS  glibc encoding differs from kernel encoding (helper is required)
+      PASS  eg_path_to_key resolves (dev,ino) of a real file
+      PASS  eg_path_to_key on a missing path returns -ENOENT
+      PASS  eg_path_to_key(NULL) returns -EINVAL
+    
+    [eg_sha256_file (FIPS 180-2 test vectors)]
+      PASS  SHA-256("")
+      PASS  SHA-256("abc")
+      PASS  SHA-256(448-bit message)
+      PASS  SHA-256(1,000,000 x 'a') across buffer boundaries
+      PASS  missing file returns -ENOENT
+    
+    [eg_is_executable]
+      PASS  0755 script -> executable (execute bit)
+      PASS  0644 file with #! -> executable (shebang)
+      PASS  0644 file with ELF magic -> executable
+      PASS  0644 plain text -> not executable
+      PASS  directory -> not executable
+      PASS  missing path -> not executable
+    
+    [eg_json_escape and json_get_str round trip]
+      PASS  escapes quote, backslash, newline, tab, control char
+      PASS  plain text unchanged
+      PASS  output is bounded and NUL-terminated
+      PASS  json_get_str recovers an escaped path
+      PASS  json_get_str on a missing key returns -ENOENT
+    
+    [audit-log enum rendering (must match data/schemas/enums.csv)]
+      PASS  eg_op_name
+      PASS  eg_decision_name
+      PASS  eg_reason_name
+    
+    [parse_duration (maintenance window)]
+      PASS  30s -> 30
+      PASS  5m -> 300
+      PASS  1h -> 3600
+      PASS  45 -> 45 (bare seconds)
+      PASS  0 rejected
+      PASS  negative rejected
+      PASS  unknown unit rejected
+      PASS  unit without number rejected
+    
+    [policy parsing and validation]
+      PASS  audit-rollout.conf: MODE audit, 3 PROTECT, 3 TRUST
+      PASS  system-enforce.conf: MODE enforce
+      PASS  empty policy loads and defaults to enforce (secure default)
+      PASS  invalid/unknown-directive.conf rejected by loader
+      PASS  invalid/bad-mode.conf rejected by loader
+      PASS  invalid/missing-argument.conf rejected by loader
+      PASS  invalid/bad-deny-selector.conf rejected by loader
+      PASS  missing policy file returns -ENOENT
+    
+    [parse_line edge cases]
+      PASS  surrounding whitespace and tab separator are trimmed
+      PASS  comment line is skipped
+      PASS  blank line is skipped
+      PASS  directives are case-sensitive
+      PASS  DENY user=<name> stores the user name
+      PASS  MODE audit clears enforce
+    
+    [glob expansion over data/fixtures/sandbox]
+      PASS  exactly 3 executables expanded (got 3)
+      PASS  bin/app, bin/tool.sh, bin/elf-noexec included
+      PASS  lib/readme.txt excluded (not executable)
+      PASS  bin/missing excluded (does not exist)
+      PASS  one TRUST entry parsed
+    
+    [integrity baseline and verification]
+      PASS  baseline records 2 files and skips the unreadable one
+      PASS  fresh scan: 2 ok, 0 changed, 0 missing
+      PASS  verify_one: unchanged file -> 0
+      PASS  verify_one: modified file -> 1
+      CHANGED  /tmp/execguard-unit.rXmUyF/integ-a
+               baseline 96d68d5048de839b8d6443131b2c6260086c5d3bbbb9095db85fe0d8847773b1
+               current  7e40d73947def685849713b029b6c69910b8c1f18b0496f268e5042300232eee
+      MISSING  /tmp/execguard-unit.rXmUyF/integ-b
+      PASS  after tamper+delete: 0 ok, 1 changed, 1 missing
+      PASS  verify_one: path absent from baseline -> 2
+      PASS  missing baseline file -> -ENOENT
+    
+    [daemon path mirror (reload idempotence)]
+      PASS  re-adding known inodes does not grow the mirror (n=2)
+      PASS  re-adding refreshes the stored path
+      PASS  unknown inode resolves to NULL
+    
+    core: 71 checks, 71 passed, 0 failed
+  core unit tests (see above)                          [PASS]
+
+2. egctl command-line interface
+  version exits 0                                      [PASS]
+  version string printed                               [PASS]
+  --help exits 0                                       [PASS]
+  help documents env overrides                         [PASS]
+  no arguments exits 2 (usage)                         [PASS]
+  unknown command exits 2                              [PASS]
+  protect with no path exits 2                         [PASS]
+  policy validate: demo.conf                           [PASS]
+  policy validate: audit-rollout.conf                  [PASS]
+  policy validate: system-enforce.conf                 [PASS]
+  policy validate: empty-but-valid.conf                [PASS]
+  policy reject: invalid/bad-deny-selector.conf        [PASS]
+    reports file:line                                  [PASS]
+  policy reject: invalid/bad-mode.conf                 [PASS]
+    reports file:line                                  [PASS]
+  policy reject: invalid/missing-argument.conf         [PASS]
+    reports file:line                                  [PASS]
+  policy reject: invalid/unknown-directive.conf        [PASS]
+    reports file:line                                  [PASS]
+  policy validate: missing file exits 1                [PASS]
+  maintenance: invalid duration exits 2                [PASS]
+  maintenance: no subcommand exits 2                   [PASS]
+  status without daemon exits 1                        [PASS]
+    explains daemon is unreachable                     [PASS]
+
+   integrity workflow (EG_CONFIG=fixtures.conf)
+  integrity baseline exits 0                           [PASS]
+    3 files recorded                                   [PASS]
+    baseline lines match baseline-entry schema         [PASS]
+  integrity scan (clean) exits 0                       [PASS]
+    3 ok, 0 changed, 0 missing                         [PASS]
+  verify unchanged file exits 0                        [PASS]
+    reports OK                                         [PASS]
+  verify tampered file exits 1                         [PASS]
+    reports CHANGED                                    [PASS]
+  integrity scan (tampered) exits 1                    [PASS]
+    1 ok, 1 changed, 1 missing                         [PASS]
+  verify path not in baseline exits 1                  [PASS]
+    reports UNKNOWN                                    [PASS]
+
+   audit log tail (EG_AUDIT_LOG)
+  logs -n 5 exits 0                                    [PASS]
+    prints exactly the last 5 events                   [PASS]
+  logs default prints 20                               [PASS]
+    default tail length is 20                          [PASS]
+  logs on missing file exits 1                         [PASS]
+
+3. eg-updater (no ExecGuard involvement: target is unprotected)
+  usage error exits 2                                  [PASS]
+  rewrites an unprotected file                         [PASS]
+    file holds exactly the new content                 [PASS]
+    created with mode 0755                             [PASS]
+  unwritable directory exits 1                         [PASS]
+
+4. Compiled BPF object (execguard.bpf.o)
+  section lsm/file_open present                        [PASS]
+  section lsm/inode_unlink present                     [PASS]
+  section lsm/inode_rename present                     [PASS]
+  section lsm/inode_setattr present                    [PASS]
+  license section is GPL                               [PASS]
+  .maps section present                                [PASS]
+  BTF present (needed for CO-RE)                       [PASS]
+  BTF: struct eg_file_key size matches userspace       [PASS]
+  BTF: struct eg_file_val size matches userspace       [PASS]
+  BTF: struct eg_state size matches userspace          [PASS]
+  eg_event layout pinned by _Static_assert in ABI header [PASS]
+  map 'protected_inodes' defined                       [PASS]
+  map 'trusted_exes' defined                           [PASS]
+  map 'state' defined                                  [PASS]
+  map 'events' defined                                 [PASS]
+
+-----------------------------------------------------------
+Total: 63   PASS: 63   FAIL: 0
+
+==================================================================
+ suite: functional
+==================================================================
+SKIP: ExecGuard daemon not reachable.
+Start it with: sudo systemctl start execguard
+
+==================================================================
+ suite: security
+==================================================================
+SKIP: ExecGuard daemon not reachable.
+Start it with: sudo systemctl start execguard
+
+==================================================================
+ suite: bypass
+==================================================================
+SKIP: ExecGuard daemon not reachable.
+Start it with: sudo systemctl start execguard
+
+==================================================================
+ summary
+==================================================================
+  unit         PASS
+  functional   SKIP (daemon not reachable / kernel lacks BPF-LSM)
+  security     SKIP (daemon not reachable / kernel lacks BPF-LSM)
+  bypass       SKIP (daemon not reachable / kernel lacks BPF-LSM)

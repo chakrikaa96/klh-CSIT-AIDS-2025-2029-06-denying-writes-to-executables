@@ -1,0 +1,9 @@
+total 3020
+-rwxr-xr-x 1 root root   20952 Oct  7 03:08 eg-updater
+-rwxr-xr-x 1 root root  222976 Oct  7 03:08 execguard
+-rw-r--r-- 1 root root   79800 Oct  7 03:08 execguard.bpf.o
+-rw-r--r-- 1 root root  250239 Oct  7 03:08 execguard.skel.h
+-rw-r--r-- 1 root root 2504300 Oct  7 03:08 vmlinux.h
+f9ed728cfe6719f8f1b9b056a3b4d66d98bd38412fe6a09b5a135a8b31aeaa71  build/execguard
+c3571dfd9a0816e7f48e368f1fd2485ab6a898fa806d96883f8013e7466109a9  build/eg-updater
+0abc6837e9c4d107f9ad936d6d98bde6e502e6dcaf5caa0dc5a393e53c10c688  build/execguard.bpf.o

@@ -1,0 +1,19 @@
+make[1]: Entering directory '/tmp/claude-0/-home-claude/291fc792-cdf5-5489-88c6-2a29440f777a/scratchpad/out/execguard'
+rm -rf build
+cleaned build/
+make[1]: Leaving directory '/tmp/claude-0/-home-claude/291fc792-cdf5-5489-88c6-2a29440f777a/scratchpad/out/execguard'
+make[1]: Entering directory '/tmp/claude-0/-home-claude/291fc792-cdf5-5489-88c6-2a29440f777a/scratchpad/out/execguard'
+  GEN     build/vmlinux.h
+bpftool btf dump file /sys/kernel/btf/vmlinux format c > build/vmlinux.h
+make[1]: Leaving directory '/tmp/claude-0/-home-claude/291fc792-cdf5-5489-88c6-2a29440f777a/scratchpad/out/execguard'
+make[1]: Entering directory '/tmp/claude-0/-home-claude/291fc792-cdf5-5489-88c6-2a29440f777a/scratchpad/out/execguard'
+  BPF     build/execguard.bpf.o
+clang -g -O2 -target bpf -D__TARGET_ARCH_x86 -Isrc/include -Ibuild -Wall -c src/kernel/execguard.bpf.c -o build/execguard.bpf.o
+llvm-strip -g build/execguard.bpf.o
+  SKEL    build/execguard.skel.h
+bpftool gen skeleton build/execguard.bpf.o > build/execguard.skel.h
+  CC/LINK build/execguard
+cc -O2 -g -Wall -Wextra -Wno-unused-parameter -Isrc/include -Ibuild src/userspace/execguard.c -o build/execguard -lbpf -lelf -lz -lcrypto -lpthread
+  CC/LINK build/eg-updater
+cc -O2 -g -Wall -Wextra -Wno-unused-parameter src/tools/eg-updater.c -o build/eg-updater
+make[1]: Leaving directory '/tmp/claude-0/-home-claude/291fc792-cdf5-5489-88c6-2a29440f777a/scratchpad/out/execguard'

@@ -1,0 +1,7 @@
+libbpf: prog 'eg_file_open': BPF program load failed: Operation not permitted
+libbpf: permission error while running as root; try raising 'ulimit -l'? current value: 8.0 MiB
+libbpf: prog 'eg_file_open': failed to load: -1
+libbpf: failed to load object 'execguard_bpf'
+libbpf: failed to load BPF skeleton 'execguard_bpf': -1
+failed to load BPF programs (err=-1). Is CONFIG_BPF_LSM=y and 'bpf' in /sys/kernel/security/lsm? Run src/scripts/check-env.sh.
+ExecGuard daemon stopped.

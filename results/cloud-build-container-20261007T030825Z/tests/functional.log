@@ -1,0 +1,2 @@
+SKIP: ExecGuard daemon not reachable.
+Start it with: sudo systemctl start execguard

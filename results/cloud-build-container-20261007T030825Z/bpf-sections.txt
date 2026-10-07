@@ -1,0 +1,8 @@
+  [ 3] lsm/file_open     PROGBITS        0000000000000000 000040 000650 00  AX  0   0  8
+  [ 5] lsm/inode_unlink  PROGBITS        0000000000000000 000690 0005c0 00  AX  0   0  8
+  [ 7] lsm/inode_rename  PROGBITS        0000000000000000 000c50 000b98 00  AX  0   0  8
+  [ 9] lsm/inode_setattr PROGBITS        0000000000000000 0017e8 000618 00  AX  0   0  8
+  [11] license           PROGBITS        0000000000000000 001e00 000004 00  WA  0   0  1
+  [12] .maps             PROGBITS        0000000000000000 001e08 000070 00  WA  0   0  8
+  [13] .BTF              PROGBITS        0000000000000000 001e78 00d25e 00      0   0  4
+  [15] .BTF.ext          PROGBITS        0000000000000000 00f0d8 001d4c 00      0   0  4
