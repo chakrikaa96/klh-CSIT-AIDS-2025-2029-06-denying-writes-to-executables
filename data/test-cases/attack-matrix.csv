@@ -1,0 +1,30 @@
+id,suite,script,condition,technique,command,syscalls,lsm_hook,audit_op,expected,expected_reason
+F-01,functional,src/tests/functional/test_basic.sh,unprotected,append before protection,echo x >> TGT,openat(O_WRONLY|O_APPEND),file_open,-,ALLOW,-
+F-02,functional,src/tests/functional/test_basic.sh,protected,read protected file,cat TGT,openat(O_RDONLY),file_open,-,ALLOW,-
+F-03,functional,src/tests/functional/test_basic.sh,protected,execute protected file,TGT,execve,-,-,ALLOW,-
+F-04,functional,src/tests/functional/test_basic.sh,protected,append while protected,echo x >> TGT,openat(O_WRONLY|O_APPEND),file_open,WRITE,DENY,protected executable
+F-05,functional,src/tests/functional/test_basic.sh,unprotected,append after unprotect,echo x >> TGT,openat(O_WRONLY|O_APPEND),file_open,-,ALLOW,-
+F-06,functional,src/tests/functional/test_basic.sh,daemon,status query,egctl status,connect(AF_UNIX),-,-,ALLOW,-
+M-A1,security,src/tests/security/test_matrix.sh,protected+untrusted,overwrite,echo x > PROT,openat(O_WRONLY|O_TRUNC),file_open,WRITE,DENY,protected executable
+M-A2,security,src/tests/security/test_matrix.sh,protected+untrusted,append,echo x >> PROT,openat(O_WRONLY|O_APPEND),file_open,WRITE,DENY,protected executable
+M-A3,security,src/tests/security/test_matrix.sh,protected+untrusted,truncate,truncate -s 0 PROT,openat(O_WRONLY)/ftruncate,file_open,WRITE,DENY,protected executable
+M-A4,security,src/tests/security/test_matrix.sh,protected+untrusted,delete,rm -f PROT,unlinkat,inode_unlink,UNLINK,DENY,protected executable
+M-A5,security,src/tests/security/test_matrix.sh,protected+untrusted,rename-over replacement,mv -f TMP PROT,renameat2,inode_rename,RENAME,DENY,protected executable
+M-B1,security,src/tests/security/test_matrix.sh,unprotected,overwrite,echo x > UNPROT,openat(O_WRONLY|O_TRUNC),file_open,-,ALLOW,-
+M-B2,security,src/tests/security/test_matrix.sh,unprotected,truncate,truncate -s 0 UNPROT,openat(O_WRONLY)/ftruncate,file_open,-,ALLOW,-
+M-B3,security,src/tests/security/test_matrix.sh,unprotected,delete,rm -f UNPROT,unlinkat,inode_unlink,-,ALLOW,-
+M-C1,security,src/tests/security/test_matrix.sh,protected+trusted,trusted updater rewrite,eg-updater PROT CONTENT,openat(O_WRONLY|O_TRUNC|O_CREAT),file_open,WRITE,ALLOW,trusted updater
+M-D1,security,src/tests/security/test_matrix.sh,protected+maintenance,write during maintenance window,echo x > PROT,openat(O_WRONLY|O_TRUNC),file_open,WRITE,ALLOW,maintenance window
+M-D2,security,src/tests/security/test_matrix.sh,protected+untrusted,write after maintenance disabled,echo x > PROT,openat(O_WRONLY|O_TRUNC),file_open,WRITE,DENY,protected executable
+M-E1,security,src/tests/security/test_matrix.sh,protected+audit-mode,write in audit-only mode,echo x > PROT,openat(O_WRONLY|O_TRUNC),file_open,WRITE,ALLOW (logged AUDIT),audit-only mode
+M-E2,security,src/tests/security/test_matrix.sh,protected+untrusted,write after re-enabling enforce,echo x > PROT,openat(O_WRONLY|O_TRUNC),file_open,WRITE,DENY,protected executable
+B-01,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,shell redirect overwrite,echo pwned > TGT,openat(O_WRONLY|O_TRUNC),file_open,WRITE,DENY,protected executable
+B-02,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,python open('w'),python3 -c open(TGT;'w'),openat(O_WRONLY|O_TRUNC|O_CREAT),file_open,WRITE,DENY,protected executable
+B-03,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,python os.open O_WRONLY|O_TRUNC,python3 -c os.open(...),openat(O_WRONLY|O_TRUNC),file_open,WRITE,DENY,protected executable
+B-04,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,dd overwrite (notrunc),dd if=/dev/zero of=TGT conv=notrunc,openat(O_WRONLY|O_CREAT),file_open,WRITE,DENY,protected executable
+B-05,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,truncate syscall,truncate -s 0 TGT,openat(O_WRONLY)/ftruncate,file_open,WRITE,DENY,protected executable
+B-06,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,in-place editor (sed -i),sed -i s/v1/v2/ TGT,openat(tmp)+renameat2,inode_rename,RENAME,DENY,protected executable
+B-07,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,temp-file replace via rename-over,mv -f NEWVER TGT,renameat2,inode_rename,RENAME,DENY,protected executable
+B-08,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,delete,rm -f TGT,unlinkat,inode_unlink,UNLINK,DENY,protected executable
+B-09,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,write via hardlink alias (same inode),echo pwned > ALIAS,openat(O_WRONLY|O_TRUNC),file_open,WRITE,DENY,protected executable
+B-10,bypass,src/tests/bypass/test_bypass.sh,protected+untrusted,chmod 0777 then write,chmod 0777 TGT; echo pwned > TGT,fchmodat+openat(O_WRONLY),file_open,WRITE,DENY,protected executable

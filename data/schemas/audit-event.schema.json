@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://execguard.local/schemas/audit-event.schema.json",
+  "title": "ExecGuard audit event",
+  "description": "One line of /var/log/execguard/audit.jsonl, written by audit_write() in src/userspace/execguard.c from a struct eg_event (src/include/execguard/eg_common.h) received over the BPF ring buffer. One event is emitted for every decision on a protected inode; operations on unprotected files are never logged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ts_ns", "decision", "op", "reason", "uid", "pid", "tgid", "comm",
+    "target_name", "target_path", "target_dev", "target_ino",
+    "caller_dev", "caller_ino"
+  ],
+  "properties": {
+    "ts_ns":       { "type": "integer", "minimum": 0, "description": "CLOCK_MONOTONIC nanoseconds at decision time (bpf_ktime_get_ns). Not wall-clock time." },
+    "decision":    { "enum": ["DENY", "ALLOW", "AUDIT"], "description": "enum eg_decision. AUDIT means the operation would have been denied but global audit-only mode is active." },
+    "op":          { "enum": ["WRITE", "UNLINK", "RENAME", "TRUNCATE"], "description": "enum eg_op. WRITE covers every write-intent open (write, append, O_TRUNC)." },
+    "reason":      { "enum": ["protected executable", "trusted updater", "maintenance window", "audit-only mode"], "description": "enum eg_reason, rendered by eg_reason_name()." },
+    "uid":         { "type": "integer", "minimum": 0, "description": "Real UID of the acting task." },
+    "pid":         { "type": "integer", "minimum": 0, "description": "Kernel PID (thread ID) of the acting task." },
+    "tgid":        { "type": "integer", "minimum": 0, "description": "Kernel TGID (userspace process ID) of the acting task." },
+    "comm":        { "type": "string", "maxLength": 15, "description": "Task command name (TASK_COMM_LEN - 1)." },
+    "target_name": { "type": "string", "maxLength": 255, "description": "Best-effort dentry name captured in-kernel. For a rename-over this is the destination name." },
+    "target_path": { "type": "string", "description": "Configured path for (target_dev, target_ino), resolved by the daemon. Empty if the inode is no longer in the daemon's mirror." },
+    "target_dev":  { "type": "integer", "minimum": 0, "description": "Kernel dev_t encoding: (major << 20) | minor." },
+    "target_ino":  { "type": "integer", "minimum": 0 },
+    "caller_dev":  { "type": "integer", "minimum": 0, "description": "Device of the acting task's executable image (mm->exe_file). 0 for kernel threads." },
+    "caller_ino":  { "type": "integer", "minimum": 0, "description": "Inode of the acting task's executable image. This is the identity checked against trusted_exes." }
+  },
+  "allOf": [
+    { "if": { "properties": { "decision": { "const": "DENY" } } },
+      "then": { "properties": { "reason": { "const": "protected executable" } } } },
+    { "if": { "properties": { "decision": { "const": "AUDIT" } } },
+      "then": { "properties": { "reason": { "const": "audit-only mode" } } } },
+    { "if": { "properties": { "decision": { "const": "ALLOW" } } },
+      "then": { "properties": { "reason": { "enum": ["trusted updater", "maintenance window"] } } } }
+  ]
+}

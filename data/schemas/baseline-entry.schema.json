@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://execguard.local/schemas/baseline-entry.schema.json",
+  "title": "ExecGuard integrity baseline entry",
+  "description": "One line of /var/lib/execguard/baseline.jsonl, written by eg_integrity_baseline() in src/userspace/execguard.c.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["path", "sha256", "size"],
+  "properties": {
+    "path":   { "type": "string", "minLength": 1, "description": "Absolute path as produced by policy glob expansion." },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "size":   { "type": "integer", "minimum": 0, "description": "File size in bytes at baseline time." }
+  }
+}

@@ -1,0 +1,13 @@
+enum,name,value,rendered_as,source
+eg_op,EG_OP_OPEN_WRITE,1,WRITE,src/include/execguard/eg_common.h
+eg_op,EG_OP_UNLINK,2,UNLINK,src/include/execguard/eg_common.h
+eg_op,EG_OP_RENAME,3,RENAME,src/include/execguard/eg_common.h
+eg_op,EG_OP_TRUNCATE,4,TRUNCATE,src/include/execguard/eg_common.h
+eg_decision,EG_DECISION_DENY,0,DENY,src/include/execguard/eg_common.h
+eg_decision,EG_DECISION_ALLOW,1,ALLOW,src/include/execguard/eg_common.h
+eg_decision,EG_DECISION_AUDIT,2,AUDIT,src/include/execguard/eg_common.h
+eg_reason,EG_REASON_NOT_PROTECTED,0,(never emitted),src/include/execguard/eg_common.h
+eg_reason,EG_REASON_PROTECTED,1,protected executable,src/include/execguard/eg_common.h
+eg_reason,EG_REASON_TRUSTED,2,trusted updater,src/include/execguard/eg_common.h
+eg_reason,EG_REASON_MAINTENANCE,3,maintenance window,src/include/execguard/eg_common.h
+eg_reason,EG_REASON_AUDIT_ONLY,4,audit-only mode,src/include/execguard/eg_common.h

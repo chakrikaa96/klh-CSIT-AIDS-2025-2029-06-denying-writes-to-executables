@@ -1,0 +1,16 @@
+# Template policy used by src/tests/unit/test_userspace.sh.
+# @FIXTURES@ is replaced with the absolute path of a temporary copy of
+# data/fixtures/sandbox, so the test never depends on the checkout location.
+#
+# Expected expansion (see data/fixtures/README.md):
+#   bin/*            -> bin/app, bin/tool.sh, bin/elf-noexec   (3 files)
+#   lib/readme.txt   -> excluded: not executable                (0 files)
+#   bin/missing      -> excluded: does not exist                (0 files)
+
+MODE enforce
+
+PROTECT @FIXTURES@/bin/*
+PROTECT @FIXTURES@/lib/readme.txt
+PROTECT @FIXTURES@/bin/missing
+
+TRUST @FIXTURES@/bin/app
