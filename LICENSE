@@ -1,0 +1,22 @@
+ExecGuard - policy-based Linux executable integrity and write protection
+Copyright (C) 2025 ExecGuard contributors
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, see <https://www.gnu.org/licenses/gpl-2.0.html>.
+
+---
+
+Every source file carries an SPDX-License-Identifier tag. The eBPF programs in
+bpf/ are licensed GPL-2.0 specifically because they invoke GPL-only kernel
+helpers (the BPF-LSM interface); the remainder of the project is licensed to
+match. The canonical, full text of the GNU General Public License version 2 is
+available at the URL above and is incorporated here by reference.
